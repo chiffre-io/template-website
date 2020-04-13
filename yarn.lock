@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@47ng/chakra-next@^2.0.1":
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/@47ng/chakra-next/-/chakra-next-2.0.1.tgz#e009a60499c9676fb9fee9bec79903635e792dc2"
-  integrity sha512-0We3YXvGCOSWejHpQVl9y0wWyh8rTGpc1JzAFbp1NT9E3fNOvB1hstsOR/a2hheWd9mWbz55OHIM9BaH1VFWDw==
+"@47ng/chakra-next@^2.1.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@47ng/chakra-next/-/chakra-next-2.1.0.tgz#44156da89f500d59acd01a87e15f8240e12b0fdd"
+  integrity sha512-iXa4Per8k0q3zTQxUs5P2cenHXe/sszBHpYOTWVQxkXOpxqNHynmT0+1+YOQqyZSi5IFOsGFaS9peg3GrBJs6A==
 
 "@ampproject/toolbox-core@^2.0.0":
   version "2.0.0"

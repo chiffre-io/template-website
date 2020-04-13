@@ -30,7 +30,7 @@
     "ci": "run-s build"
   },
   "dependencies": {
-    "@47ng/chakra-next": "^2.0.1",
+    "@47ng/chakra-next": "^2.1.0",
     "@chakra-ui/core": "^0.7.0",
     "@emotion/core": "^10.0.28",
     "@emotion/styled": "^10.0.27",
