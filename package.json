@@ -48,7 +48,7 @@
     "@next/bundle-analyzer": "^9.4.0",
     "@next/mdx": "^9.4.0",
     "@types/jest": "^25.2.1",
-    "@types/node": "^13.13.5",
+    "@types/node": "^14.0.0",
     "@zeit/next-source-maps": "^0.0.3",
     "commitlint": "^8.3.5",
     "dotenv": "^8.2.0",
