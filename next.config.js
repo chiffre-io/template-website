@@ -1,67 +1,92 @@
-require('dotenv').config()
-const {
-  PHASE_PRODUCTION_BUILD,
-  PHASE_DEVELOPMENT_SERVER
-} = require('next/constants')
-const webpack = require('webpack')
+// Use the SentryWebpack plugin to upload the source maps during build step
+const SentryWebpackPlugin = require('@sentry/webpack-plugin')
 const withPlugins = require('next-compose-plugins')
 const withTranspilation = require('next-transpile-modules')([
   '@47ng/chakra-next'
 ])
-const withSourceMaps = require('@zeit/next-source-maps')
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true'
 })
-const withMDX = require('@next/mdx')({
-  extension: /\.mdx?$/
-})
 
-const loadFromEnv = names => {
-  const out = {}
-  for (const name of names) {
-    out[name] = process.env[name]
-  }
-  return out
+const {
+  SENTRY_DSN,
+  SENTRY_ORG,
+  SENTRY_PROJECT,
+  SENTRY_AUTH_TOKEN,
+  NODE_ENV,
+  VERCEL_GITHUB_COMMIT_SHA
+} = process.env
+
+function publishEnv(names) {
+  return names.reduce(
+    (env, name) => ({
+      ...env,
+      [`NEXT_PUBLIC_${name}`]: process.env[name]
+    }),
+    {}
+  )
 }
 
 const nextConfig = {
-  // Will be available both in the client and server
-  env: loadFromEnv(['SENTRY_DSN']),
+  productionBrowserSourceMaps: true,
+  env: publishEnv(['VERCEL_GITHUB_COMMIT_SHA', 'SENTRY_DSN']),
+  webpack: (config, options) => {
+    // In `pages/_app.js`, Sentry is imported from @sentry/browser. While
+    // @sentry/node will run in a Node.js environment. @sentry/node will use
+    // Node.js-only APIs to catch even more unhandled exceptions.
+    //
+    // This works well when Next.js is SSRing your page on a server with
+    // Node.js, but it is not what we want when your client-side bundle is being
+    // executed by a browser.
+    //
+    // Luckily, Next.js will call this webpack function twice, once for the
+    // server and once for the client. Read more:
+    // https://nextjs.org/docs/api-reference/next.config.js/custom-webpack-config
+    //
+    // So ask Webpack to replace @sentry/node imports with @sentry/browser when
+    // building the browser's bundle
+    if (!options.isServer) {
+      config.resolve.alias['@sentry/node'] = '@sentry/browser'
+    }
 
-  webpack: (config, { buildId }) => {
-    // Fixes npm packages that depend on `fs` module
-    // config.node = {
-    //   fs: 'empty'
-    // }
+    // Define an environment variable so source code can check whether or not
+    // it's running on the server so we can correctly initialize Sentry
     config.plugins.push(
-      new webpack.DefinePlugin({
-        'process.env.SENTRY_RELEASE': JSON.stringify(buildId)
+      new options.webpack.DefinePlugin({
+        'process.env.NEXT_IS_SERVER': JSON.stringify(
+          options.isServer.toString()
+        )
       })
     )
+
+    // When all the Sentry configuration env variables are available/configured
+    // The Sentry webpack plugin gets pushed to the webpack plugins to build
+    // and upload the source maps to sentry.
+    // This is an alternative to manually uploading the source maps
+    // Note: This is disabled in development mode.
+    if (
+      SENTRY_DSN &&
+      SENTRY_ORG &&
+      SENTRY_PROJECT &&
+      SENTRY_AUTH_TOKEN &&
+      VERCEL_GITHUB_COMMIT_SHA &&
+      NODE_ENV === 'production'
+    ) {
+      config.plugins.push(
+        new SentryWebpackPlugin({
+          include: '.next',
+          ignore: ['node_modules'],
+          stripPrefix: ['webpack://_N_E/'],
+          urlPrefix: `~${basePath}/_next`,
+          release: VERCEL_GITHUB_COMMIT_SHA
+        })
+      )
+    }
     return config
-  },
-  ...(process.env.NODE_ENV === 'production'
-    ? {}
-    : {
-        experimental: {
-          reactRefresh: true
-        }
-      })
+  }
 }
 
 module.exports = withPlugins(
-  [
-    withBundleAnalyzer,
-    [withSourceMaps, {}, [PHASE_PRODUCTION_BUILD]],
-    withTranspilation,
-    [
-      withMDX,
-      {
-        pageExtensions: ['tsx', 'mdx']
-      },
-      // Remove to enable MDX rendering to production
-      [PHASE_DEVELOPMENT_SERVER]
-    ]
-  ],
+  [withBundleAnalyzer, withTranspilation],
   nextConfig
 )

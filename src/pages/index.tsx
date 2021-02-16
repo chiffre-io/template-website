@@ -1,7 +1,7 @@
 import React from 'react'
 import { NextPage } from 'next'
-import { Container, StackCard } from '@47ng/chakra-next'
-import Button from '@chakra-ui/core/dist/Button'
+import { StackCard } from '@47ng/chakra-next'
+import { Button, Container } from '@chakra-ui/react'
 
 // --
 
