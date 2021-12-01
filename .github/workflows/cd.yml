@@ -37,7 +37,7 @@ jobs:
       #    project: ./out
       #    login: ${{ secrets.SURGE_LOGIN }}
       #    token: ${{ secrets.SURGE_TOKEN }}
-      - uses: 8398a7/action-slack@45986a1c69e93353648c176ce49eecddebebf64e
+      - uses: 8398a7/action-slack@c9ff874f8549f97317ec9f6162d5449ee77bc984
         name: Notify on Slack
         if: always() # Pick up events even if the job fails or is canceled.
         continue-on-error: true
